@@ -1,0 +1,447 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>REST API Tricks Presentation</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #000000 0%, #1a1a1a 100%);
+            color: #ffffff;
+            overflow-x: hidden;
+        }
+
+        .presentation-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            position: relative;
+        }
+
+        .slide-container {
+            position: relative;
+            width: 100%;
+            height: 80vh;
+            background: linear-gradient(135deg, #000000 0%, #1a1a1a 100%);
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+
+        .slide {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            padding: 60px;
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            opacity: 0;
+            transform: translateX(100%);
+            transition: all 0.5s ease-in-out;
+        }
+
+        .slide.active {
+            display: flex;
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        .slide h1 {
+            font-size: 4rem;
+            font-weight: 700;
+            margin-bottom: 2rem;
+            color: #DAA520;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+            letter-spacing: 2px;
+        }
+
+        .slide h2 {
+            font-size: 2.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #DAA520;
+        }
+
+        .slide h3 {
+            font-size: 2rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: #DAA520;
+        }
+
+        .slide p {
+            font-size: 1.3rem;
+            line-height: 1.8;
+            color: #ffffff;
+            max-width: 80%;
+            margin-bottom: 1rem;
+        }
+
+        .slide ul {
+            text-align: left;
+            font-size: 1.2rem;
+            line-height: 2;
+            color: #ffffff;
+        }
+
+        .slide li {
+            margin-bottom: 0.5rem;
+            color: #ffffff;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .control-btn {
+            background: linear-gradient(135deg, #DAA520 0%, #B8860B 100%);
+            color: #000000;
+            border: none;
+            padding: 12px 24px;
+            font-size: 1rem;
+            font-weight: 600;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 8px rgba(218, 165, 32, 0.3);
+        }
+
+        .control-btn:hover {
+            background: linear-gradient(135deg, #B8860B 0%, #DAA520 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(218, 165, 32, 0.4);
+        }
+
+        .control-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .slide-counter {
+            background: rgba(218, 165, 32, 0.2);
+            color: #DAA520;
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-weight: 600;
+            font-size: 1.1rem;
+            border: 2px solid #DAA520;
+        }
+
+        .download-button-container {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .download-button {
+            background: linear-gradient(135deg, #DAA520 0%, #B8860B 100%);
+            color: #000000;
+            border: none;
+            padding: 15px 30px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 6px 12px rgba(218, 165, 32, 0.3);
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .download-button:hover {
+            background: linear-gradient(135deg, #B8860B 0%, #DAA520 100%);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 16px rgba(218, 165, 32, 0.4);
+        }
+
+        .download-button i {
+            font-size: 1.2rem;
+        }
+
+        /* PDF-specific styles */
+        .pdf-slide {
+            background: white !important;
+            color: black !important;
+            border: 2px solid #DAA520 !important;
+            border-radius: 10px !important;
+            margin-bottom: 20px !important;
+            padding: 40px !important;
+            page-break-after: always !important;
+            min-height: 100vh !important;
+            display: flex !important;
+            flex-direction: column !important;
+            justify-content: center !important;
+            align-items: center !important;
+            text-align: center !important;
+        }
+
+        .pdf-slide h1, .pdf-slide h2, .pdf-slide h3 {
+            color: #DAA520 !important;
+        }
+
+        .pdf-slide p, .pdf-slide li {
+            color: black !important;
+        }
+
+        .pdf-slide ul {
+            text-align: left !important;
+            color: black !important;
+        }
+
+        /* Responsive design */
+        @media (max-width: 768px) {
+            .slide {
+                padding: 40px 20px;
+            }
+            
+            .slide h1 {
+                font-size: 2.5rem;
+            }
+            
+            .slide h2 {
+                font-size: 1.8rem;
+            }
+            
+            .slide h3 {
+                font-size: 1.5rem;
+            }
+            
+            .slide p {
+                font-size: 1.1rem;
+            }
+            
+            .controls {
+                flex-direction: column;
+                gap: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="presentation-container">
+        <div class="slide-container">
+            <!-- Slide 1: Title -->
+            <div id="slide-1" class="slide active">
+                <h1>REST API Tricks for Clean & Scalable Backends</h1>
+                <h2>By Chaitanya G</h2>
+                <h3>Delivering Non-Spaghetti Code</h3>
+            </div>
+
+            <!-- Slide 2: Filters -->
+            <div id="slide-2" class="slide">
+                <h2>Trick: Use Filters फिल्टर</h2>
+                <p>Filtering allows you to request only the specific data you need, which reduces unnecessary information and noise in the response.</p>
+                <h3>Example: Fetching users of a certain age.</h3>
+                <div style="background: rgba(218, 165, 32, 0.1); padding: 20px; border-radius: 10px; margin: 20px 0; text-align: left; font-family: monospace; color: #DAA520;">
+                    app.get('/users', ...)
+                </div>
+            </div>
+
+            <!-- Slide 3: Search -->
+            <div id="slide-3" class="slide">
+                <h2>Trick: Implement Search Queries 🔍</h2>
+                <p>You can build search functionality to sift through data, for example, by matching a query term against usernames.</p>
+            </div>
+
+            <!-- Slide 4: Sorting -->
+            <div id="slide-4" class="slide">
+                <h2>Trick: Sort Your Results sırala</h2>
+                <p>Sorting gives you control over the order of the results, which leads to better usability. You can order results in both ascending (ASC) and descending (DESC) fashion.</p>
+                <h3>Example:</h3>
+                <div style="background: rgba(218, 165, 32, 0.1); padding: 20px; border-radius: 10px; margin: 20px 0; text-align: left; font-family: monospace; color: #DAA520;">
+                    SELECT * FROM users ORDER BY age ASC;
+                </div>
+            </div>
+
+            <!-- Slide 5: Pagination -->
+            <div id="slide-5" class="slide">
+                <h2>Trick: Paginate Large Datasets 📚</h2>
+                <p>For large amounts of data, use pagination with Limit and Offset to send data in chunks. This results in faster and more manageable responses.</p>
+            </div>
+
+            <!-- Slide 6: Core Principles -->
+            <div id="slide-6" class="slide">
+                <h1>Foundation: Key REST API Principles 🏛️</h1>
+                <h2>Following fundamental REST principles is key to keeping your code clean and "future-friendly".</h2>
+                <ul>
+                    <li>Statelessness</li>
+                    <li>Client-Server Architecture</li>
+                    <li>Uniform Interface</li>
+                    <li>Resource-Based URIs</li>
+                    <li>Data Representation in JSON/XML</li>
+                    <li>Proper Use of HTTP Methods</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button id="prev-btn" class="control-btn">
+                <i class="fas fa-chevron-left"></i> Previous
+            </button>
+            
+            <div id="slide-counter" class="slide-counter">1 / 6</div>
+            
+            <button id="next-btn" class="control-btn">
+                Next <i class="fas fa-chevron-right"></i>
+            </button>
+        </div>
+
+        <div class="download-button-container">
+            <button id="download-pdf" class="download-button">
+                <i class="fas fa-download"></i> Download All Slides as PDF
+            </button>
+        </div>
+    </div>
+
+    <script>
+        const slides = document.querySelectorAll('.slide');
+        const prevButton = document.getElementById('prev-btn');
+        const nextButton = document.getElementById('next-btn');
+        const slideCounter = document.getElementById('slide-counter');
+        const downloadButton = document.getElementById('download-pdf');
+        let currentSlide = 0;
+
+        function showSlide(index) {
+            slides.forEach((slide, i) => {
+                slide.classList.toggle('active', i === index);
+            });
+            slideCounter.textContent = `${index + 1} / ${slides.length}`;
+            
+            // Update button states
+            prevButton.style.visibility = index === 0 ? 'hidden' : 'visible';
+            nextButton.style.visibility = index === slides.length - 1 ? 'hidden' : 'visible';
+        }
+
+        function prevSlide() {
+            if (currentSlide > 0) {
+                currentSlide--;
+                showSlide(currentSlide);
+            }
+        }
+
+        function nextSlide() {
+            if (currentSlide < slides.length - 1) {
+                currentSlide++;
+                showSlide(currentSlide);
+            }
+        }
+
+        // Event listeners
+        prevButton.addEventListener('click', prevSlide);
+        nextButton.addEventListener('click', nextSlide);
+
+        // Keyboard navigation
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowLeft') {
+                prevSlide();
+            } else if (e.key === 'ArrowRight') {
+                nextSlide();
+            }
+        });
+
+        // Simple and reliable download functionality
+        downloadButton.addEventListener('click', () => {
+            // Show loading state
+            downloadButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating PDF...';
+            downloadButton.disabled = true;
+            
+            // Create PDF content
+            let pdfContent = '';
+            
+            // Add each slide to PDF content
+            slides.forEach((slide, index) => {
+                const slideContent = slide.innerHTML;
+                pdfContent += `
+                    <div class="pdf-slide">
+                        <div style="position: absolute; top: 20px; right: 20px; font-size: 14px; color: #DAA520; font-weight: bold;">
+                            Slide ${index + 1} of ${slides.length}
+                        </div>
+                        ${slideContent}
+                    </div>
+                `;
+            });
+            
+            // Create a temporary div for PDF generation
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = pdfContent;
+            tempDiv.style.position = 'absolute';
+            tempDiv.style.left = '-9999px';
+            tempDiv.style.top = '0';
+            tempDiv.style.width = '800px';
+            tempDiv.style.background = 'white';
+            tempDiv.style.padding = '20px';
+            tempDiv.style.color = 'black';
+            
+            // Add to document
+            document.body.appendChild(tempDiv);
+            
+            // Configure PDF options
+            const opt = {
+                margin: [10, 10],
+                filename: 'REST-API-Tricks-Presentation.pdf',
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { 
+                    scale: 2,
+                    useCORS: true,
+                    backgroundColor: '#ffffff',
+                    logging: false,
+                    allowTaint: true
+                },
+                jsPDF: { 
+                    unit: 'mm', 
+                    format: 'a4', 
+                    orientation: 'portrait',
+                    compress: true
+                }
+            };
+            
+            // Generate PDF
+            html2pdf().set(opt).from(tempDiv).save()
+                .then(() => {
+                    // Remove temporary div
+                    document.body.removeChild(tempDiv);
+                    
+                    // Reset button
+                    downloadButton.innerHTML = '<i class="fas fa-download"></i> Download All Slides as PDF';
+                    downloadButton.disabled = false;
+                })
+                .catch((error) => {
+                    console.error('PDF generation failed:', error);
+                    alert('PDF generation failed. Please try again.');
+                    
+                    // Remove temporary div
+                    if (document.body.contains(tempDiv)) {
+                        document.body.removeChild(tempDiv);
+                    }
+                    
+                    // Reset button
+                    downloadButton.innerHTML = '<i class="fas fa-download"></i> Download All Slides as PDF';
+                    downloadButton.disabled = false;
+                });
+        });
+
+        // Initialize first slide
+        showSlide(currentSlide);
+    </script>
+</body>
+</html>
